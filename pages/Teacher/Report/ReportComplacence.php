@@ -21,19 +21,18 @@ try {
         tb_users.UserPrefix,
         tb_users.UserFirstName,
         tb_users.UserLastName,
-        tb_assessments_questions.ass_question_article,
-        GROUP_CONCAT(DISTINCT tb_assessments_questions.ass_question_id) AS question_id,
-        GROUP_CONCAT(CONCAT(tb_assessments_questions.ass_question_article,'.',tb_assessments_questions.ass_question_text)) AS question_text,
-        GROUP_CONCAT(TRIM(tb_assessments_responses.response_rating)) AS response_rating,
-        GROUP_CONCAT(TRIM(tb_assessments_responses.response_text)) AS response_text,
+        GROUP_CONCAT(DISTINCT tb_assessments_questions.ass_question_id ORDER BY tb_assessments_questions.ass_question_id) AS question_id,
+        GROUP_CONCAT(CONCAT(tb_assessments_questions.ass_question_article,'.',tb_assessments_questions.ass_question_text) ORDER BY tb_assessments_questions.ass_question_id) AS question_text,
+        GROUP_CONCAT(TRIM(tb_assessments_responses.response_rating) ORDER BY tb_assessments_questions.ass_question_id) AS response_rating,
+        GROUP_CONCAT(TRIM(tb_assessments_responses.response_text) ORDER BY tb_assessments_questions.ass_question_id) AS response_text,
         tb_assessments_responses.user_id,
-        tb_assessments_responses.created_at
+        MAX(tb_assessments_responses.created_at) AS created_at
     FROM
     tb_assessments_responses
     INNER JOIN tb_users ON tb_users.UserID = tb_assessments_responses.user_id
     INNER JOIN tb_assessments_questions ON tb_assessments_questions.ass_question_id = tb_assessments_responses.question_id 
     WHERE course_id = ?
-    GROUP BY tb_assessments_responses.user_id
+    GROUP BY tb_assessments_responses.user_id, tb_users.UserPrefix, tb_users.UserFirstName, tb_users.UserLastName
     "); 
     $stmt = $pdo->prepare($stmt1); 
     $stmt->bindValue(1,$_GET["CourseID"]);

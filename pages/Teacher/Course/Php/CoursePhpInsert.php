@@ -31,7 +31,11 @@ if($_FILES["CourseImage"]["error"] == 0){
     $course->CourseImage = "";
 }
 
-if($course->create()) {
+$result = $course->create();
+
+if($result === "LIMIT_EXCEEDED") {
+    echo "limit";
+} else if($result) {
     echo 1;
 } else {
     echo 0;

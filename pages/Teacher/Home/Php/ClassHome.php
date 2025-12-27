@@ -8,7 +8,7 @@ class ClassHome {
     public function __construct($db) {
         $this->conn = $db;
        
-        if(empty($_SESSION['UserID'])){
+        if(empty($_SESSION['UserID']) || !isset($_SESSION['UserType']) || $_SESSION['UserType'] !== "teacher"){
             header("Location: ../../../");
             exit();
         }
@@ -34,55 +34,61 @@ class ClassHome {
     }
 
 
+    // ดึงข้อมูลสรุปสถิติทั้งหมดใน Query เดียวเพื่อประสิทธิภาพ
+    public function getStats() {
+        $query = "
+            SELECT 
+                (SELECT COUNT(*) FROM tb_courses) as total_courses,
+                (SELECT COUNT(*) FROM tb_lessons) as total_lessons,
+                (SELECT COUNT(*) FROM tb_enrollments) as total_enrollments,
+                (SELECT COUNT(*) FROM tb_enrollments WHERE EnrollCertificate != '') as total_graduation,
+                (SELECT COUNT(*) FROM tb_users WHERE UserType = 'student') as total_students
+        ";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     // อ่านข้อมูลคอร์สเรียนทั้งหมด
     public function read() {
         $query = "SELECT * FROM " . $this->table_name;
-
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
-
         return $stmt;
     }
 
     public function CheckRegisterAll(){
-
         $query = "SELECT UserPrefix,UserFirstName,UserLastName,UserPhone,DateCreated,Email FROM tb_users WHERE UserType = 'student'";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
-
-        return $stmt;
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function CheckLessonsAll(){
-
         $query = "SELECT LessonNo,LessonTitle FROM tb_lessons";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
-
-        return $stmt;
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function CheckCoursesAll(){
-
         $query = "SELECT CourseCode,CourseName FROM tb_courses";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
-
-        return $stmt;
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * @deprecated Use getStats() instead for better performance
+     */
     public function CheckPackageCourse() {
-
-        $query = "SELECT COUNT(*) FROM tb_users";
+        $query = "SELECT COUNT(*) FROM tb_users WHERE UserType = 'student'";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
-
         return $stmt->fetchColumn();
-
     }
 
     public function CheckUserEnrollments() {
-
         $query = "SELECT 
         tb_enrollments.UserID,
         tb_enrollments.EnrollmentID,
@@ -100,11 +106,30 @@ class ClassHome {
         
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
-
         return $stmt;
-
     }
-    
 
+    public function CheckGraduationAll() {
+        $query = "SELECT 
+        tb_enrollments.UserID,
+        tb_enrollments.EnrollmentID,
+        tb_enrollments.CourseID,
+        tb_users.UserPrefix,
+        tb_users.UserFirstName,
+        tb_users.UserLastName,
+        tb_courses.CourseName,
+        tb_users.UserPhone,
+        tb_enrollments.EnrollDate,
+        tb_users.Email,
+        tb_enrollments.EnrollCertificate
+        FROM tb_enrollments
+        INNER JOIN tb_courses ON tb_enrollments.CourseID = tb_courses.CourseID
+        INNER JOIN tb_users ON tb_enrollments.UserID = tb_users.UserID
+        WHERE tb_enrollments.EnrollCertificate != ''";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt;
+    }
 }
 ?>

@@ -10,13 +10,18 @@ $Title = $course->TitleBar;
 $stmt = $course->read();
 $num = $stmt->rowCount();
 
-$CheckPackage = $course->CheckPackageCourse();
-if($CheckPackage > 2){
+// เรียกใช้ ClassSystemSettings เพื่อตรวจสอบข้อจำกัด
+include_once '../../../pages/Admin/PhpClass/ClassSystemSettings.php';
+$Settings = new ClassSystemSettings($db);
+$MaxCourses = (int)$Settings->getSetting('max_total_courses', 50);
+
+// ตรวจสอบจำนวนคอร์สเรียนเทียบกับลิมิตของระบบ
+if($num < $MaxCourses){ 
     $href = '../../../pages/Teacher/Course/CourseInsert';
     $alert = '';
 }else{    
     $href = '#';
-    $alert = 'onclick="AlertPackage()"';
+    $alert = 'onclick="AlertLimitExceeded()"';
 }
 ?>
 
@@ -76,7 +81,7 @@ if($CheckPackage > 2){
                                 </thead>
                                 <tbody>
                                     <?php  while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) :?>
-                                    <tr>
+                                    <tr id="Course<?=$row['CourseID'];?>">
                                         <td><?=$row['CourseCode'];?></td>
                                         <td><?=$row['CourseName'];?></td>
                                         <td>
@@ -91,12 +96,12 @@ if($CheckPackage > 2){
                                         <td>
                                             <a href="CourseUpdate?CourseID=<?=$row['CourseID']?>"
                                                 class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> แก้ไข</a> <a
-                                                href="http://" onclick="return confirm('ยังไม่เปิดให้ลบข้อมูล');"
+                                                href="#" onclick="confirmDeleteCourse('<?=$row['CourseID'];?>'); return false;"
                                                 class="btn btn-danger btn-sm"><i class="fas fa-trash-alt"></i> ลบ</a>
                                         </td>
                                     </tr>
                                     <?php endwhile; ?>
-                                <tbody>
+                                </tbody>
                             </table>
                             <?php else :  ?>
                             <div>No courses found.</div>
@@ -119,11 +124,12 @@ if($CheckPackage > 2){
 </html>
 
 <script>
-function AlertPackage() {
+function AlertLimitExceeded() {
     Swal.fire({
-        title: "แจ้งเตือน!",
-        text: "แพคเกจในการสร้างคอร์สเรียนหมดแล้ว! ติดต่อผู้ดูและระบบ",
-        icon: "warning"
+        title: "ไม่สามารถสร้างคอร์สเพิ่มได้",
+        text: "จำนวนคอร์สเรียนในระบบครบตามจำนวนที่กำหนดแล้ว (<?=$MaxCourses?> คอร์ส) กรุณาติดต่อผู้ดูแลระบบ",
+        icon: "warning",
+        confirmButtonText: "รับทราบ"
     });
 }
 </script>

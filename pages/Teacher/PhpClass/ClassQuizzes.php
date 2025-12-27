@@ -122,93 +122,122 @@ class ClassQuizzes {
     }
 
     public function QuizzesPhpUpdate($UpdateQuestion_Img = null) {
-
-        
-        if($_FILES["UpdateQuestionImg"]["error"] == 0){ 
-            // ลบรูปเก่าก่อน 
-            $delQuiz = "SELECT QuestionImg FROM tb_questions WHERE QuestionID = ?";
-            $stmtDelQuiz = $this->conn->prepare($delQuiz);
-            $stmtDelQuiz->bindValue(1, $_POST['UpdateQuestionID']);
-            $stmtDelQuiz->execute();
-            $imageUploader = new ClassUploader(0,0, 500,"Question"); // Resize to 500x500
-            $array = ($imageUploader->deleteImage("../../../../uploads/Question/".$stmtDelQuiz->fetch(PDO::FETCH_ASSOC)['QuestionImg']));
-            
-            // อัพเดตรูปใหม่
-            $imageUploader = new ClassUploader($_FILES["UpdateQuestionImg"]["name"],$_FILES["UpdateQuestionImg"]["tmp_name"], 500,"Question"); 
-            $array = json_decode($imageUploader->upload());
-            $UpdateQuestion_Img =  $array->Text;   
-            $queryQuestions = "UPDATE tb_questions SET QuestionText = ?,QuestionImg = ? WHERE QuestionID = ?";
-            $stmtQuestions = $this->conn->prepare($queryQuestions);
-            $stmtQuestions->bindValue(1,$_POST['UpdateQuestionText']);
-            $stmtQuestions->bindValue(3,$_POST['UpdateQuestionID']);
-            $stmtQuestions->bindValue(2, $UpdateQuestion_Img);
-            $stmtQuestions->execute();
-            
-        }else{
-            $queryQuestions = "UPDATE tb_questions SET QuestionText = ? WHERE QuestionID = ?";
-            $stmtQuestions = $this->conn->prepare($queryQuestions);
-            $stmtQuestions->bindValue(1,$_POST['UpdateQuestionText']);
-            $stmtQuestions->bindValue(2,$_POST['UpdateQuestionID']);
-            $stmtQuestions->execute();
-        }           
-              
-         // อัพเดตตัวเลือก
-
-         
-        // print_r($_POST);
-        // print_r($_FILES);
-        // exit();
-
-        $SelIDOption = "SELECT OptID FROM tb_options WHERE OptQuestionID = ?";
-        $stmtIDOption = $this->conn->prepare($SelIDOption);
-        $stmtIDOption->bindValue(1,$_POST['UpdateQuestionID']);
-        $stmtIDOption->execute();
-        $i = 0;
-        while ($rowIDOption = $stmtIDOption->fetch(PDO::FETCH_ASSOC)) { 
-            
-            if($_FILES["OptImg"]["error"][$i] == 0){
-                $delQuiz = "SELECT OptImg FROM tb_options WHERE OptID = ?";
-                $stmtDelQuiz = $this->conn->prepare($delQuiz);
-                $stmtDelQuiz->bindValue(1, $rowIDOption['OptID']);
-                $stmtDelQuiz->execute();
-                $imageUploader = new ClassUploader(0,0, 500,"Question"); // Resize to 500x500
-                $array = ($imageUploader->deleteImage("../../../../uploads/Options/".$stmtDelQuiz->fetch(PDO::FETCH_ASSOC)['OptImg']));
-
-                $imageUploader = new ClassUploader($_FILES["OptImg"]["name"][$i],$_FILES["OptImg"]["tmp_name"][$i], 500,"Options"); 
-                $array = json_decode($imageUploader->upload());
-                $UpdateOptions_Img =  $array->Text;   
-
-                $query = "UPDATE tb_options SET OptChoice = ?, OptAnswer = ?, OptImg = ? WHERE OptID = ?";
-                $stmtUpdateData = $this->conn->prepare($query);
-                $stmtUpdateData->bindValue(1,$_POST['UpdateOptChoice'][$i]);
-                $stmtUpdateData->bindValue(2,$_POST['UpdateOptAnswer'][$i]);
-                $stmtUpdateData->bindValue(3,$UpdateOptions_Img);
-                $stmtUpdateData->bindValue(4,$rowIDOption['OptID']);
-                $stmtUpdateData->execute();
-            }else{
-                $query = "UPDATE tb_options SET OptChoice = ?, OptAnswer = ? WHERE OptID = ?";
-                $stmtUpdateData = $this->conn->prepare($query);
-                $stmtUpdateData->bindValue(1,$_POST['UpdateOptChoice'][$i]);
-                $stmtUpdateData->bindValue(2,$_POST['UpdateOptAnswer'][$i]);
-                $stmtUpdateData->bindValue(3,$rowIDOption['OptID']);
-                $stmtUpdateData->execute();
-            }           
-            $i++;
-        }
-
-       
-        
-        if(!empty($_POST['OptChoice'])){
-            foreach ($_POST['OptChoice']  as $key => $v_OptChoice) {
-                $Choice = "INSERT INTO tb_options (OptQuestionID,OptChoice,OptAnswer) VALUES (?,?,?)";    
-                $stmtChoice = $this->conn->prepare($Choice);       
-                $stmtChoice->bindValue(1,$_POST['UpdateQuestionID']);
-                $stmtChoice->bindValue(2, $v_OptChoice);
-                $stmtChoice->bindValue(3, $_POST['OptAnswer'][$key]);
-                $stmtChoice->execute();
+        try {
+            // 1. Update Question Data
+            if ($_FILES["UpdateQuestionImg"]["error"] == 0) { 
+                // Get old image to delete
+                $stmt = $this->conn->prepare("SELECT QuestionImg FROM tb_questions WHERE QuestionID = ?");
+                $stmt->execute([$_POST['UpdateQuestionID']]);
+                $oldImg = $stmt->fetchColumn();
+                if ($oldImg) {
+                    $uploader = new ClassUploader("", "", 0, "Question");
+                    $uploader->deleteImage("../../../../uploads/Question/" . $oldImg);
+                }
+                
+                // Upload new image
+                $uploader = new ClassUploader($_FILES["UpdateQuestionImg"]["name"], $_FILES["UpdateQuestionImg"]["tmp_name"], 800, "Question");
+                $uploadResult = json_decode($uploader->upload());
+                $UpdateQuestion_Img = $uploadResult->Text;
+                
+                $stmt = $this->conn->prepare("UPDATE tb_questions SET QuestionText = ?, QuestionImg = ? WHERE QuestionID = ?");
+                $stmt->execute([$_POST['UpdateQuestionText'], $UpdateQuestion_Img, $_POST['UpdateQuestionID']]);
+            } else {
+                // Check if user requested to DELETE the image without uploading new one
+                if (isset($_POST['UpdateQuestionImgDelete']) && $_POST['UpdateQuestionImgDelete'] == '1') {
+                    $stmt = $this->conn->prepare("SELECT QuestionImg FROM tb_questions WHERE QuestionID = ?");
+                    $stmt->execute([$_POST['UpdateQuestionID']]);
+                    $oldImg = $stmt->fetchColumn();
+                    if ($oldImg) {
+                        $uploader = new ClassUploader("", "", 0, "Question");
+                        $uploader->deleteImage("../../../../uploads/Question/" . $oldImg);
+                    }
+                    $stmt = $this->conn->prepare("UPDATE tb_questions SET QuestionText = ?, QuestionImg = '' WHERE QuestionID = ?");
+                    $stmt->execute([$_POST['UpdateQuestionText'], $_POST['UpdateQuestionID']]);
+                } else {
+                    $stmt = $this->conn->prepare("UPDATE tb_questions SET QuestionText = ? WHERE QuestionID = ?");
+                    $stmt->execute([$_POST['UpdateQuestionText'], $_POST['UpdateQuestionID']]);
+                }
             }
+
+            // 2. Handle Options
+            $UpdateOptChoice = $_POST['UpdateOptChoice'] ?? [];
+            $UpdateOptAnswer = $_POST['UpdateOptAnswer'] ?? [];
+            $OptID = $_POST['OptID'] ?? []; // Existing IDs
+            $UpdateOptImgDelete = $_POST['UpdateOptImgDelete'] ?? []; // Deletion flags
+            
+            // Note: OptID only has entries for existing options. 
+            // UpdateOptChoice has entries for BOTH existing and new options.
+            
+            foreach ($UpdateOptChoice as $index => $choiceText) {
+                $answer = $UpdateOptAnswer[$index] ?? 0;
+                $currentOptID = $OptID[$index] ?? null;
+                $hasNewImg = isset($_FILES["OptImg"]["error"][$index]) && $_FILES["OptImg"]["error"][$index] == 0;
+                $shouldDeleteImg = isset($UpdateOptImgDelete[$index]) && $UpdateOptImgDelete[$index] == '1';
+                
+                $newImgName = null;
+                if ($hasNewImg) {
+                    $uploader = new ClassUploader($_FILES["OptImg"]["name"][$index], $_FILES["OptImg"]["tmp_name"][$index], 500, "Options");
+                    $uploadResult = json_decode($uploader->upload());
+                    $newImgName = $uploadResult->Text;
+                }
+
+                if ($currentOptID) {
+                    // Update existing option
+                    if ($hasNewImg) {
+                        // Delete old option image
+                        $stmt = $this->conn->prepare("SELECT OptImg FROM tb_options WHERE OptID = ?");
+                        $stmt->execute([$currentOptID]);
+                        $oldOptImg = $stmt->fetchColumn();
+                        if ($oldOptImg) {
+                            $uploader = new ClassUploader("", "", 0, "Options");
+                            $uploader->deleteImage("../../../../uploads/Options/" . $oldOptImg);
+                        }
+                        
+                        $stmt = $this->conn->prepare("UPDATE tb_options SET OptChoice = ?, OptAnswer = ?, OptImg = ? WHERE OptID = ?");
+                        $stmt->execute([$choiceText, $answer, $newImgName, $currentOptID]);
+                    } elseif ($shouldDeleteImg) {
+                        // User clicked X to remove image
+                        $stmt = $this->conn->prepare("SELECT OptImg FROM tb_options WHERE OptID = ?");
+                        $stmt->execute([$currentOptID]);
+                        $oldOptImg = $stmt->fetchColumn();
+                        if ($oldOptImg) {
+                            $uploader = new ClassUploader("", "", 0, "Options");
+                            $uploader->deleteImage("../../../../uploads/Options/" . $oldOptImg);
+                        }
+                        $stmt = $this->conn->prepare("UPDATE tb_options SET OptChoice = ?, OptAnswer = ?, OptImg = '' WHERE OptID = ?");
+                        $stmt->execute([$choiceText, $answer, $currentOptID]);
+                    } else {
+                        $stmt = $this->conn->prepare("UPDATE tb_options SET OptChoice = ?, OptAnswer = ? WHERE OptID = ?");
+                        $stmt->execute([$choiceText, $answer, $currentOptID]);
+                    }
+                } else {
+                    // Insert new option added during edit
+                    $stmt = $this->conn->prepare("INSERT INTO tb_options (OptQuestionID, OptChoice, OptAnswer, OptImg) VALUES (?, ?, ?, ?)");
+                    $stmt->execute([$_POST['UpdateQuestionID'], $choiceText, $answer, $newImgName]);
+                }
+            }
+
+            // 3. Delete options that were removed in UI
+            $stmt = $this->conn->prepare("SELECT OptID, OptImg FROM tb_options WHERE OptQuestionID = ?");
+            $stmt->execute([$_POST['UpdateQuestionID']]);
+            $existingOptions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            foreach ($existingOptions as $opt) {
+                if (!in_array($opt['OptID'], $OptID)) {
+                    // This option was removed by user
+                    if ($opt['OptImg']) {
+                        $uploader = new ClassUploader("", "", 0, "Options");
+                        $uploader->deleteImage("../../../../uploads/Options/" . $opt['OptImg']);
+                    }
+                    $stmt = $this->conn->prepare("DELETE FROM tb_options WHERE OptID = ?");
+                    $stmt->execute([$opt['OptID']]);
+                }
+            }
+
+            return 1;
+        } catch (Exception $e) {
+            return json_encode(['Msg' => 0, 'Text' => $e->getMessage()]);
         }
-        return 1;
     }
 
     public function UpdateLesson() {

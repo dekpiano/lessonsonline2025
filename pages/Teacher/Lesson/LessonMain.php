@@ -90,7 +90,7 @@ $Lesson->readCourse();
                                         </td>
                                     </tr>
                                     <?php endwhile; ?>
-                                <tbody>
+                                </tbody>
                             </table>
                             <?php else :  ?>
                             <div>No Lessons found.</div>

@@ -1,61 +1,57 @@
+document.addEventListener("DOMContentLoaded", () => {
+  const password1Input = document.getElementById("PasswordMain");
+  const password2Input = document.getElementById("ConfrimPassword");
+  const submitButton = document.getElementById("submitButton");
 
-document.addEventListener('DOMContentLoaded', () => {
-    const password1Input = document.getElementById('PasswordMain');
-    const password2Input = document.getElementById('ConfrimPassword');
-    const messageElement = document.getElementById('message');
-    const submitButton = document.getElementById('submitButton');
+  // Requirement elements
+  const reqLength = document.getElementById("req-length");
+  const reqUpper = document.getElementById("req-upper");
+  const reqLower = document.getElementById("req-lower");
+  const reqNumber = document.getElementById("req-number");
+  const reqSpecial = document.getElementById("req-special");
+  const reqMatch = document.getElementById("req-match");
 
-    function validatePassword(password) {
-        const minLength = 8;
-        const maxLength = 20;
-        const minUpper = 1;
-        const minLower = 1;
-        const minDigit = 1;
-        const minSpecial = 1;
-
-        if (password.length < minLength || password.length > maxLength) {
-            return `รหัสผ่านต้องมีความยาวระหว่าง ${minLength} ถึง ${maxLength} ตัวอักษร`;
-        }
-        if ((password.match(/[A-Z]/g) || []).length < minUpper) {
-            return `รหัสผ่านต้องมีตัวอักษรพิมพ์ใหญ่ อย่างน้อย ${minUpper} ตัว`;
-        }
-        if ((password.match(/[a-z]/g) || []).length < minLower) {
-            return `รหัสผ่านต้องมีตัวอักษรพิมพ์เล็ก อย่างน้อย ${minLower} ตัว`;
-        }
-        if ((password.match(/[0-9]/g) || []).length < minDigit) {
-            return `รหัสผ่านต้องมีตัวเลข อย่างน้อย ${minDigit} ตัว`;
-        }
-        if ((password.match(/[\W_]/g) || []).length < minSpecial) {
-            return `รหัสผ่านต้องมีตัวอักษรพิเศษ อย่างน้อย ${minSpecial} ตัว`;
-        }
-
-        return "รหัสผ่านถูกต้อง";
+  function updateRequirement(element, isMet) {
+    const icon = element.querySelector("i");
+    if (isMet) {
+      element.classList.remove("requirement-unmet");
+      element.classList.add("requirement-met");
+      icon.classList.remove("fa-circle");
+      icon.classList.add("fa-check-circle");
+    } else {
+      element.classList.remove("requirement-met");
+      element.classList.add("requirement-unmet");
+      icon.classList.remove("fa-check-circle");
+      icon.classList.add("fa-circle");
     }
+  }
 
-    function validateForm() {
-        const password1 = password1Input.value;
-        const password2 = password2Input.value;
+  function validateForm() {
+    const p1 = password1Input.value;
+    const p2 = password2Input.value;
 
-        const validationMessage = validatePassword(password1);
+    const isLength = p1.length >= 8 && p1.length <= 20;
+    const isUpper = /[A-Z]/.test(p1);
+    const isLower = /[a-z]/.test(p1);
+    const isNumber = /[0-9]/.test(p1);
+    const isSpecial = /[\W_]/.test(p1);
+    const isMatch = p1 === p2 && p1 !== "";
 
-        if (validationMessage !== "รหัสผ่านถูกต้อง") {
-            messageElement.textContent = validationMessage;
-            messageElement.style.color = "red";
-            submitButton.disabled = true; // ปิดการใช้งานปุ่ม
-            return;
-        }
+    updateRequirement(reqLength, isLength);
+    updateRequirement(reqUpper, isUpper);
+    updateRequirement(reqLower, isLower);
+    updateRequirement(reqNumber, isNumber);
+    updateRequirement(reqSpecial, isSpecial);
+    updateRequirement(reqMatch, isMatch);
 
-        if (password1 === password2) {
-            messageElement.textContent = "รหัสผ่านตรงกัน";
-            messageElement.style.color = "green";
-            submitButton.disabled = false; // เปิดใช้งานปุ่ม
-        } else {
-            messageElement.textContent = "รหัสผ่านไม่ตรงกัน";
-            messageElement.style.color = "red";
-            submitButton.disabled = true; // ปิดการใช้งานปุ่ม
-        }
-    }
+    const allMet =
+      isLength && isUpper && isLower && isNumber && isSpecial && isMatch;
+    submitButton.disabled = !allMet;
+  }
 
-    password1Input.addEventListener('input', validateForm);
-    password2Input.addEventListener('input', validateForm);
+  password1Input.addEventListener("input", validateForm);
+  password2Input.addEventListener("input", validateForm);
+
+  // Initialize
+  validateForm();
 });

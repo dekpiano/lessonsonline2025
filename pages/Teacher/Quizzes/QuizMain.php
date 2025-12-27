@@ -107,63 +107,167 @@ $ShowQuestion = $Quiz->readAll($_GET['LessonID']);
 </html>
 
 <style>
-.custom-file-input~.custom-file-label::after {
-    content: "";
+/* Modern Modal Styling */
+.modal-content {
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 
-.custom-file-input:focus~.custom-file-label {
-    border-color: #80bdff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .25);
+.modal-header {
+    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    color: white;
+    border-radius: 15px 15px 0 0;
+    padding: 1.5rem;
 }
 
-.image-preview-container {
+.modal-header .close {
+    color: white;
+    text-shadow: none;
+    opacity: 0.8;
+}
+
+.modal-header .close:hover {
+    opacity: 1;
+}
+
+.modal-body {
+    padding: 2rem;
+    background-color: #f8f9fc;
+}
+
+/* Question Area */
+.question-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    margin-bottom: 2rem;
+}
+
+/* Option Card */
+.option-item {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+    border: 1px solid #e3e6f0;
     position: relative;
-    display: inline-block;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
 }
 
-.image-preview {
+.option-item:hover {
+    border-color: #4e73df;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.05);
+}
+
+.option-item.is-correct {
+    border-color: #1cc88a;
+    background-color: #f0fff4;
+}
+
+/* Choice Labels (A, B, C...) */
+.choice-label {
+    width: 35px;
+    height: 35px;
+    background: #4e73df;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-weight: bold;
+    margin-right: 15px;
+    flex-shrink: 0;
+    font-size: 14px;
+}
+
+/* Image Upload Widgets */
+.upload-trigger {
+    cursor: pointer;
+    font-size: 1.25rem;
+    color: #4e73df;
+    transition: all 0.2s;
+    padding: 8px;
+    border-radius: 8px;
+    background: #f1f3f9;
+    margin-right: 10px;
+}
+
+.upload-trigger:hover {
+    background: #4e73df;
+    color: white;
+}
+
+/* Image Previews */
+.image-preview-wrapper {
+    position: relative;
     margin-top: 10px;
-    width: 100%;
-    max-width: 300px;
-    display: none;
+    max-width: 250px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid #eaecf4;
 }
 
-.remove-button {
+.image-preview-wrapper img {
+    width: 100%;
+    display: block;
+}
+
+.btn-remove-img {
     position: absolute;
     top: 5px;
     right: 5px;
-    background-color: red;
+    background: rgba(231, 74, 59, 0.9);
     color: white;
     border: none;
     border-radius: 50%;
-    width: 25px;
-    height: 25px;
-    display: none;
-    justify-content: center;
+    width: 28px;
+    height: 28px;
+    display: flex;
     align-items: center;
+    justify-content: center;
     cursor: pointer;
+    transition: all 0.2s;
+    z-index: 10;
 }
 
-.remove-button:hover {
-    background-color: darkred;
+.btn-remove-img:hover {
+    background: #e74a3b;
+    transform: scale(1.1);
 }
 
-.upload-icon {
-    cursor: pointer;
-    font-size: 30px;
-    color: #007bff;
+/* Correct Answer Checkbox */
+.correct-checkbox {
+    margin-left: 15px;
 }
 
-.upload-icon:hover {
-    color: #0056b3;
+.custom-control-input:checked ~ .custom-control-label::before {
+    background-color: #1cc88a;
+    border-color: #1cc88a;
+}
+
+/* Animations */
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.option-item {
+    animation: fadeInDown 0.3s ease-out forwards;
 }
 </style>
-<!-- Modal -->
+
+<!-- Modal Create -->
 <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">สร้างแบบทดสอบ</h5>
+                <h5 class="modal-title d-flex align-items-center" id="exampleModalLabel">
+                    <i class="fas fa-plus-circle mr-2"></i> สร้างแบบทดสอบใหม่
+                </h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -171,69 +275,88 @@ $ShowQuestion = $Quiz->readAll($_GET['LessonID']);
             <form id="FormInsertQuizzes" class="needs-validation" enctype="multipart/form-data" novalidate>
                 <input type="hidden" id="LessonID" name="LessonID" value="<?=$_GET['LessonID']?>">
                 <div class="modal-body">
-                    <div class="form-group">
-                        <label for="inputDescription">คำถาม</label>
-                        <div class="d-flex">
-                            <textarea id="QuestionText" name="QuestionText" class="form-control" rows="2"
-                                required></textarea>
-                            <div class="custom-file ml-2" style="width:auto;">
-                                <input type="file" class="custom-file-input" name="QuestionImg" id="customFile"
-                                    accept="image/*" style="display: none;">
-                                <i class="fas fa-image upload-icon"
-                                    onclick="document.getElementById('customFile').click();"></i>
+                    
+                    <!-- Question Section -->
+                    <div class="question-section">
+                        <label class="font-weight-bold text-primary mb-3"><i class="fas fa-question-circle mr-1"></i> โจทย์คำถาม</label>
+                        <div class="row">
+                            <div class="col-md-9">
+                                <textarea id="QuestionText" name="QuestionText" class="form-control form-control-lg" 
+                                    placeholder="พิมพ์คำถามที่ต้องการ..." rows="3" required style="border-radius: 10px;"></textarea>
+                                <div class="invalid-feedback">กรุณาตั้งคำถาม</div>
+                            </div>
+                            <div class="col-md-3 d-flex flex-column align-items-center justify-content-center border-left">
+                                <span class="text-xs text-muted mb-2">รูปภาพประกอบ (ถ้ามี)</span>
+                                <div class="upload-trigger" onclick="document.getElementById('customFile').click();">
+                                    <i class="fas fa-image"></i> เพิ่มรูปภาพ
+                                </div>
+                                <input type="file" class="custom-file-input d-none" name="QuestionImg" id="customFile" accept="image/*">
                             </div>
                         </div>
+                        <div class="image-preview-wrapper mt-3 d-none" id="q-preview-box">
+                            <img id="imagePreview" src="#" alt="Preview">
+                            <button type="button" class="btn-remove-img" id="removeButton" title="ลบรูปภาพ">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
 
-                        <div class="invalid-feedback">
-                            กรุณาตั้งคำถาม
-                        </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <label class="font-weight-bold text-dark m-0"><i class="fas fa-list-ul mr-1"></i> ตัวเลือกคำตอบ</label>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addOption()">
+                            <i class="fas fa-plus"></i> เพิ่มตัวเลือก
+                        </button>
                     </div>
-                    <div class="form-group">
-                        <div class="image-preview-container">
-                            <img id="imagePreview" class="image-preview" src="#" alt="Image Preview">
-                            <div id="removeButton" class="remove-button">&times;</div>
-                        </div>
-                    </div>
-                    <hr>
-                    <div class="form-group">
-                        <div class="d-flex justify-content-between">
-                            <div>คำตอบ</div>
-                            <div>เฉลย</div>
-                        </div>
-                        <div id="options-container">
-                            <?php for ($i=1; $i <=4 ; $i++) :?>
-                            <div>
-                                <div class="d-flex align-items-center">
-                                    <div class="mr-2" style="width: -webkit-fill-available;">
-                                        <input type="text" id="OptChoice" name="OptChoice[]" class="form-control"
-                                            placeholder="ใส่ตัวเลือกคำตอบ" required>                                        
-                                    </div>
-                                    <div>
-                                        <label for="OrtionFile<?=$i?>" class="file-label mb-0 mr-2"><i
-                                                class="fas fa-image upload-icon"></i></label>
-                                        <input type="file" class="option-file-insert" name="OptImg[]" id="OrtionFile<?=$i?>"
-                                            accept="image/*" style="display: none; ">
-                                    </div>
-                                    <div>
-                                        <div class="icheck-primary d-inline">
-                                            <input type="checkbox" id="OptAnswer<?=$i?>" name="OptAnswer[]" value="1">
-                                            <label for="OptAnswer<?=$i?>">
-                                            </label>
-                                        </div>
+
+                    <!-- Options Section -->
+                    <div id="options-container">
+                        <?php 
+                        $labels = ['A', 'B', 'C', 'D', 'E', 'F'];
+                        for ($i=1; $i <=4 ; $i++) :
+                        ?>
+                        <div class="option-item d-flex flex-column" id="opt-item-<?=$i?>">
+                            <div class="d-flex align-items-center">
+                                <div class="choice-label"><?=$labels[$i-1]?></div>
+                                <div class="flex-grow-1">
+                                    <input type="text" name="OptChoice[]" class="form-control border-0 bg-light"
+                                        placeholder="ระบุตัวเลือกคำตอบ" required style="border-radius: 8px;">
+                                </div>
+                                
+                                <div class="ml-2">
+                                    <label for="OrtionFile<?=$i?>" class="upload-trigger mb-0" title="เพิ่มรูปภาพตัวเลือก">
+                                        <i class="fas fa-camera"></i>
+                                    </label>
+                                    <input type="file" class="option-file-insert d-none" name="OptImg[]" id="OrtionFile<?=$i?>" accept="image/*">
+                                </div>
+
+                                <div class="correct-checkbox">
+                                    <div class="custom-control custom-checkbox ml-2">
+                                        <input type="checkbox" class="custom-control-input" id="OptAnswer<?=$i?>" name="OptAnswer[]" value="1">
+                                        <label class="custom-control-label font-weight-bold text-xs" for="OptAnswer<?=$i?>">ถูก</label>
                                     </div>
                                 </div>
-                                <img id="preview<?=$i?>" class="img-fluid" style="display:none;width:150px;" src="#" alt="">
-                                <div id="removeButton" class="remove-button">&times;</div>
+                                <?php if($i > 2): // Allow deleting choices after first two ?>
+                                <button type="button" class="btn btn-link text-danger ml-2 p-1" onclick="$(this).closest('.option-item').fadeOut(200, function(){ $(this).remove(); })">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                                <?php endif; ?>
                             </div>
-                            <?php endfor; ?>
+                            
+                            <div class="image-preview-wrapper mt-2 d-none" id="preview-box-<?=$i?>">
+                                <img id="preview<?=$i?>" src="#" alt="">
+                                <button type="button" class="btn-remove-img" onclick="removeOptionImg(<?=$i?>)" title="ลบรูปภาพ">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
                         </div>
-
+                        <?php endfor; ?>
                     </div>
-
-                    <button type="button" class="btn btn-secondary mt-2" onclick="addOption()">เพิ่มตัวเลือก</button>
                 </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">บันทึก</button>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-link text-muted" data-dismiss="modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary px-4 shadow-sm" style="border-radius: 8px;">
+                        <i class="fas fa-save mr-1"></i> บันทึกแบบทดสอบ
+                    </button>
                 </div>
             </form>
         </div>
@@ -241,98 +364,120 @@ $ShowQuestion = $Quiz->readAll($_GET['LessonID']);
 </div>
 
 <script>
+function getLabel(index) {
+    var labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+    return labels[index] || (index + 1);
+}
+
 function addOption() {
     var container = $("#options-container");
-    var id = container.children().length + 1;
-    var html =
-        '<div><div class="d-flex align-items-center mt-2"><div class="mr-2" style="width: -webkit-fill-available;"><input type="text" id="OptChoice" name="OptChoice[]" class="form-control"placeholder="ใส่ตัวเลือกคำตอบ" required></div><div><label for="OrtionFile' +
-        id +
-        '" class="file-label mb-0 mr-2"><i class="fas fa-image upload-icon"></i></label><input type="file" class="option-file-insert" name="OptImg[]" id="OrtionFile' +
-        id +
-        '"  accept="image/*" style="display: none;"> </div><div><div class="icheck-primary d-inline"><input type="checkbox" id="OptAnswer' +
-        id + '" name="OptAnswer[]" value="1"><label for="OptAnswer' + id +
-        '"></label></div></div></div><img id="preview' + id +
-        '" style="display:none;width:150px;" src="#" alt=""><div id="removeButton" class="remove-button">&times;</div></div>';
-    container.append(html);
+    var id = container.find('.option-item').length + 1;
+    var label = getLabel(id - 1);
+    
+    var html = `
+        <div class="option-item d-flex flex-column" id="opt-item-${id}" style="display:none;">
+            <div class="d-flex align-items-center">
+                <div class="choice-label">${label}</div>
+                <div class="flex-grow-1">
+                    <input type="text" name="OptChoice[]" class="form-control border-0 bg-light"
+                        placeholder="ระบุตัวเลือกคำตอบ" required style="border-radius: 8px;">
+                </div>
+                <div class="ml-2">
+                    <label for="OrtionFile${id}" class="upload-trigger mb-0">
+                        <i class="fas fa-camera"></i>
+                    </label>
+                    <input type="file" class="option-file-insert d-none" name="OptImg[]" id="OrtionFile${id}" accept="image/*">
+                </div>
+                <div class="correct-checkbox">
+                    <div class="custom-control custom-checkbox ml-2">
+                        <input type="checkbox" class="custom-control-input" id="OptAnswer${id}" name="OptAnswer[]" value="1">
+                        <label class="custom-control-label font-weight-bold text-xs" for="OptAnswer${id}">ถูก</label>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-link text-danger ml-2 p-1" onclick="removeOption(this)">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+            <div class="image-preview-wrapper mt-2 d-none" id="preview-box-${id}">
+                <img id="preview${id}" src="#" alt="">
+                <button type="button" class="btn-remove-img" onclick="removeOptionImg(${id})" title="ลบรูปภาพ">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>`;
+    
+    var $newOption = $(html);
+    container.append($newOption);
+    $newOption.fadeIn(300);
 }
 
 function UpdateaddOption() {
     var container = $("#Update-options-container");
-    var id = container.children().length + 1;
-    var html =
-        '<div><div class="d-flex align-items-center mt-2"><div class="mr-2" style="width: -webkit-fill-available;"><input type="text" id="UpdateOptChoice" name="UpdateOptChoice[]" class="form-control"placeholder="ใส่ตัวเลือกคำตอบ" required></div><div><label for="OrtionFile' +
-        id +
-        '" class="file-label mb-0 mr-2"><i class="fas fa-image upload-icon"></i></label><input type="file" class="option-file-Update" name="OptImg[]" id="OrtionFile' +
-        id +
-        '"  accept="image/*" style="display: none;"> </div><div><div class="icheck-primary d-inline"><input type="checkbox" id="UpdateOptAnswer' +
-        id + '" name="UpdateOptAnswer[]" value="1"><label for="UpdateOptAnswer' + id + '"></label></div></div></div><img id="OptionPreviwe' + id +
-        '" style="display:none;width:150px;" src="#" alt=""></div>';
-    container.append(html);
-}
-</script>
-
-
-
-<!-- Modal -->
-<div class="modal fade" id="ModelUpdateQuiz" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">แก้ไขแบบทดสอบ</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
+    var id = container.find('.option-item').length + 1;
+    var label = getLabel(id - 1);
+    
+    var html = `
+        <div class="option-item d-flex flex-column" id="up-opt-item-${id}" style="display:none;">
+            <div class="d-flex align-items-center">
+                <div class="choice-label">${label}</div>
+                <div class="flex-grow-1">
+                    <input type="text" name="UpdateOptChoice[]" class="form-control border-0 bg-light"
+                        placeholder="ระบุตัวเลือกคำตอบ" required style="border-radius: 8px;">
+                </div>
+                <div class="ml-2">
+                    <label for="UP-OrtionFile${id}" class="upload-trigger mb-0">
+                        <i class="fas fa-camera"></i>
+                    </label>
+                    <input type="file" class="option-file-Update d-none" name="OptImg[]" id="UP-OrtionFile${id}" accept="image/*">
+                    <input type="hidden" name="UpdateOptImgDelete[]" class="opt-img-delete" value="0">
+                </div>
+                <div class="correct-checkbox">
+                    <div class="custom-control custom-checkbox ml-2">
+                        <input type="checkbox" class="custom-control-input" id="UpdateOptAnswer${id}" name="UpdateOptAnswer[]" value="1">
+                        <label class="custom-control-label font-weight-bold text-xs" for="UpdateOptAnswer${id}">ถูก</label>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-link text-danger ml-2 p-1" onclick="removeOption(this)">
+                    <i class="fas fa-trash-alt"></i>
                 </button>
             </div>
-            <form id="FormUpdateQuizzes" enctype="multipart/form-data" class="needs-validation" novalidate>
-                <input type="hidden" id="UpdateQuestionID" name="UpdateQuestionID" value="">
-                <div class="modal-body">
-                    <div class="form-group">
-                     
-                        <label for="inputDescription">คำถาม</label>
-                        <div class="d-flex">
-                            <textarea id="UpdateQuestionText" name="UpdateQuestionText" class="form-control" rows="2"
-                                required></textarea>
-                            <div class="custom-file ml-2" style="width:auto;">
-                                <input type="file" class="custom-file-input-Update" name="UpdateQuestionImg"
-                                    id="UpdatecustomFile" accept="image/*" style="display: none;">
-                                <i class="fas fa-image upload-icon"
-                                    onclick="document.getElementById('UpdatecustomFile').click();"></i>
-                            </div>
-                        </div>
-                        <div class="image-preview-container">
-                            <img id="UpdateimagePreview" class="img-fluid" src="#" alt="" style="width:200px">
-                            <div id="UpdateremoveButton" class="remove-button">&times;</div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="d-flex justify-content-between">
-                            <div>ตัวเลือก</div>
-                            <div>เฉลย</div>
-                        </div>
-                        <div id="Update-options-container">
+            <div class="image-preview-wrapper mt-2 d-none" id="up-preview-box-${id}">
+                <img id="OptionPreviwe${id}" src="#" alt="">
+                <button type="button" class="btn-remove-img" onclick="removeUpdateOptionImg(${id})" title="ลบรูปภาพ">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>`;
+    
+    var $newOption = $(html);
+    container.append($newOption);
+    $newOption.fadeIn(300);
+}
 
-                        </div>
-                    </div>
+function removeOption(btn) {
+    $(btn).closest('.option-item').fadeOut(200, function(){ $(this).remove(); });
+}
 
-                    <button type="button" class="btn btn-secondary mt-2"
-                        onclick="UpdateaddOption()">เพิ่มตัวเลือก</button>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">บันทึก</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+function removeOptionImg(id) {
+    $('#OrtionFile' + id).val(null);
+    $('#preview' + id).attr('src', '#');
+    $('#preview-box-' + id).addClass('d-none');
+}
 
-<script>
+function removeUpdateOptionImg(id) {
+    $('#UP-OrtionFile' + id).val(null);
+    $('#up-opt-item-' + id).find('.opt-img-delete').val('1');
+    $('#OptionPreviwe' + id).attr('src', '#');
+    $('#up-preview-box-' + id).addClass('d-none');
+}
+
 $(document).on("change", ".custom-file-input", function() {
     var file = $(this)[0].files[0];
     if (file) {
         var reader = new FileReader();
         reader.onload = function(e) {
-            $('#imagePreview').attr('src', e.target.result).show();
-            $('#removeButton').show();
+            $('#imagePreview').attr('src', e.target.result);
+            $('#q-preview-box').removeClass('d-none');
         }
         reader.readAsDataURL(file);
     }
@@ -343,8 +488,8 @@ $(document).on("change", ".custom-file-input-Update", function() {
     if (file) {
         var reader = new FileReader();
         reader.onload = function(e) {
-            $('#UpdateimagePreview').attr('src', e.target.result).show();
-            $('#UpdateremoveButton').show();
+            $('#UpdateimagePreview').attr('src', e.target.result);
+            $('#up-q-preview-box').removeClass('d-none');
         }
         reader.readAsDataURL(file);
     }
@@ -352,50 +497,144 @@ $(document).on("change", ".custom-file-input-Update", function() {
 
 $(document).on("click", "#removeButton", function() {
     $('#customFile').val(null);
-    $('#imagePreview').hide().attr('src', '#');
-    $(this).hide();
-    $('.custom-file-label').removeClass("selected").html("");
-    $('.upload-icon').show();
+    $('#q-preview-box').addClass('d-none');
+    $('#imagePreview').attr('src', '#');
 });
+
 $(document).on("click", "#UpdateremoveButton", function() {
-    $('#UpdateimagePreview').hide().attr('src', '#');
-    $(this).hide();
-    $('.custom-file-label').removeClass("selected").html("");
-    $('.upload-icon').show();
+    $('#UpdatecustomFile').val(null);
+    $('#UpdateQuestionImgDelete').val('1');
+    $('#up-q-preview-box').addClass('d-none');
+    $('#UpdateimagePreview').attr('src', '#');
 });
 
 $(document).on('change', '.option-file-insert', function(e) {
-    e.preventDefault();
     var inputId = $(this).attr('id');
-    var previewId = 'preview' + inputId.slice(-1);
-    //console.log(previewId);
-    //$('#' + previewId).html("");
+    var idNum = inputId.match(/\d+/)[0];
     var file = this.files[0];
     if (file && /(\.|\/)(gif|jpe?g|png)$/i.test(file.type)) {
         var reader = new FileReader();
         reader.onload = function(e) {
-
-            $('#' + previewId).attr('src', e.target.result).show();
+            $('#preview' + idNum).attr('src', e.target.result);
+            $('#preview-box-' + idNum).removeClass('d-none');
         }
         reader.readAsDataURL(file);
     }
 });
 
 $(document).on('change', '.option-file-Update', function(e) {
-    e.preventDefault();
     var inputId = $(this).attr('id');
-    var OptionPreviwe = 'OptionPreviwe' + inputId.slice(-1);
-    //console.log(OptionPreviwe);
-    //$('#' + previewId).html("");
+    var idNum = inputId.match(/\d+/)[0];
     var file = this.files[0];
     if (file && /(\.|\/)(gif|jpe?g|png)$/i.test(file.type)) {
         var reader = new FileReader();
         reader.onload = function(e) {
-
-            $('#' + OptionPreviwe).attr('src', e.target.result).show();
+            $('#OptionPreviwe' + idNum).attr('src', e.target.result);
+            $('#up-preview-box-' + idNum).removeClass('d-none');
         }
         reader.readAsDataURL(file);
     }
 });
 
+// Correct Answer Visual Feedback
+$(document).on('change', '.custom-control-input', function() {
+    if($(this).is(':checked')) {
+        $(this).closest('.option-item').addClass('is-correct');
+    } else {
+        $(this).closest('.option-item').removeClass('is-correct');
+    }
+});
+// Reset Form Create when closed
+$('#exampleModal').on('hidden.bs.modal', function () {
+    let form = $('#FormInsertQuizzes');
+    form[0].reset();
+    form.find('.is-correct').removeClass('is-correct');
+    form.find('.image-preview-wrapper').addClass('d-none');
+    form.find('img').attr('src', '#');
+    
+    // Restore default 4 options if some were deleted/added
+    let container = $('#options-container');
+    container.empty();
+    for (let i = 1; i <= 4; i++) {
+        addOption();
+    }
+    // Remove the 'display:none' from the first 4 since addOption adds them with fade
+    container.find('.option-item').show();
+});
+
+// Reset Form Edit when closed
+$('#ModelUpdateQuiz').on('hidden.bs.modal', function () {
+    let form = $('#FormUpdateQuizzes');
+    form[0].reset();
+    form.find('.is-correct').removeClass('is-correct');
+    form.find('.image-preview-wrapper').addClass('d-none');
+    form.find('img').attr('src', '#');
+    $('#Update-options-container').empty();
+});
 </script>
+
+
+
+<!-- Modal Edit -->
+<div class="modal fade" id="ModelUpdateQuiz" tabindex="-1" aria-labelledby="ModelUpdateLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%);">
+                <h5 class="modal-title d-flex align-items-center" id="ModelUpdateLabel">
+                    <i class="fas fa-edit mr-2"></i> แก้ไขแบบทดสอบ
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="FormUpdateQuizzes" enctype="multipart/form-data" class="needs-validation" novalidate>
+                <input type="hidden" id="UpdateQuestionID" name="UpdateQuestionID" value="">
+                <div class="modal-body">
+                    
+                    <!-- Question Section -->
+                    <div class="question-section">
+                        <label class="font-weight-bold text-warning mb-3"><i class="fas fa-question-circle mr-1"></i> โจทย์คำถาม</label>
+                        <div class="row">
+                            <div class="col-md-9">
+                                <textarea id="UpdateQuestionText" name="UpdateQuestionText" class="form-control form-control-lg" 
+                                    rows="3" required style="border-radius: 10px;"></textarea>
+                                <div class="invalid-feedback">กรุณาตั้งคำถาม</div>
+                            </div>
+                            <div class="col-md-3 d-flex flex-column align-items-center justify-content-center border-left">
+                                <span class="text-xs text-muted mb-2">เปลี่ยนรูปภาพ</span>
+                                <div class="upload-trigger" onclick="document.getElementById('UpdatecustomFile').click();">
+                                    <i class="fas fa-image"></i> อัปโหลดใหม่
+                                </div>
+                                <input type="file" class="custom-file-input-Update d-none" name="UpdateQuestionImg" id="UpdatecustomFile" accept="image/*">
+                                <input type="hidden" name="UpdateQuestionImgDelete" id="UpdateQuestionImgDelete" value="0">
+                            </div>
+                        </div>
+                        <div class="image-preview-wrapper mt-3" id="up-q-preview-box">
+                            <img id="UpdateimagePreview" src="#" alt="Preview">
+                            <button type="button" class="btn-remove-img" id="UpdateremoveButton" title="ลบรูปภาพ">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <label class="font-weight-bold text-dark m-0"><i class="fas fa-list-ul mr-1"></i> ตัวเลือกคำตอบ</label>
+                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="UpdateaddOption()">
+                            <i class="fas fa-plus"></i> เพิ่มตัวเลือก
+                        </button>
+                    </div>
+
+                    <div id="Update-options-container">
+                        <!-- Options will be loaded via AJAX from JsQuizzes.js -->
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-link text-muted" data-dismiss="modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-warning px-4 shadow-sm text-dark font-weight-bold" style="border-radius: 8px;">
+                        <i class="fas fa-save mr-1"></i> บันทึกการแก้ไข
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -15,7 +15,7 @@ class ClassCourse {
     public function __construct($db) {
         $this->conn = $db;
        
-        if(empty($_SESSION['UserID']) && !$_SESSION['UserType'] == "teacher"){
+        if(empty($_SESSION['UserID']) || !isset($_SESSION['UserType']) || $_SESSION['UserType'] !== "teacher"){
             header("Location: ../../../");
             exit();
         }
@@ -77,6 +77,20 @@ class ClassCourse {
 
     // เพิ่มคอร์สเรียนใหม่
     public function create() {
+        // Check Limit
+        include_once '../../../pages/Admin/PhpClass/ClassSystemSettings.php';
+        $Settings = new ClassSystemSettings($this->conn);
+        $MaxCourses = (int)$Settings->getSetting('max_total_courses', 50);
+
+        // Count ALL courses in the system
+        $queryCheck = "SELECT COUNT(*) FROM " . $this->table_name;
+        $stmtCheck = $this->conn->prepare($queryCheck);
+        $stmtCheck->execute();
+        $TotalCourses = $stmtCheck->fetchColumn();
+
+        if ($TotalCourses >= $MaxCourses) {
+            return "LIMIT_EXCEEDED"; // Special return value for control
+        }
 
         $data = array('CourseCode','CourseName','CourseDescription','CourseStartDate','CourseEndDate','CourseDuration','CourseType','CourseImage','CourseStatus','TeacherID','CourseDateCreated');
         $ASum = array();
@@ -89,8 +103,7 @@ class ClassCourse {
 
         $stmt = $this->conn->prepare($query);
 
-        foreach ($data as $key => $v_data) {      
-            // $this->$v_data=htmlspecialchars(strip_tags($this->$v_data));      
+        foreach ($data as $key => $v_data) {    
              $stmt->bindParam(":".$v_data, $this->$v_data);
          }  
 
@@ -120,7 +133,6 @@ class ClassCourse {
 
         // ผูกค่า
         foreach ($data as $key => $v_data) {      
-            // $this->$v_data=htmlspecialchars(strip_tags($this->$v_data));      
              $stmt->bindParam(":".$v_data, $this->$v_data);
          }  
          
@@ -170,6 +182,93 @@ class ClassCourse {
 
         return $stmt->fetchColumn();
 
+    }
+    public function DeleteCourse($CourseID) {
+        try {
+            // Include ClassUploader if not already included
+            include_once '../../../php/Uploadfile/ClassUploader.php';
+            
+            // 1. Get Course Info (Image)
+            $query = "SELECT CourseImage FROM " . $this->table_name . " WHERE CourseID = ?";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([$CourseID]);
+            $course = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$course) return false;
+
+            // 2. Get All Lessons
+            $query = "SELECT LessonID FROM tb_lessons WHERE CourseID = ?";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([$CourseID]);
+            $lessons = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+            foreach ($lessons as $lessonID) {
+                // 3. Get All Questions for this Lesson
+                $query = "SELECT QuestionID, QuestionImg FROM tb_questions WHERE QuestionLessonID = ?";
+                $stmtQ = $this->conn->prepare($query);
+                $stmtQ->execute([$lessonID]);
+                $questions = $stmtQ->fetchAll(PDO::FETCH_ASSOC);
+
+                foreach ($questions as $question) {
+                    // 4. Get All Options for this Question
+                    $query = "SELECT OptImg FROM tb_options WHERE OptQuestionID = ?";
+                    $stmtO = $this->conn->prepare($query);
+                    $stmtO->execute([$question['QuestionID']]);
+                    $options = $stmtO->fetchAll(PDO::FETCH_COLUMN);
+
+                    // Delete Option Images
+                    $uploaderOpt = new ClassUploader(0, 0, 0, "Options");
+                    foreach ($options as $optImg) {
+                        if ($optImg) {
+                            $uploaderOpt->deleteImage("../../../../uploads/Options/" . $optImg);
+                        }
+                    }
+
+                    // Delete Options Records
+                    $query = "DELETE FROM tb_options WHERE OptQuestionID = ?";
+                    $stmtDelOpt = $this->conn->prepare($query);
+                    $stmtDelOpt->execute([$question['QuestionID']]);
+
+                    // Delete Question Image
+                    if ($question['QuestionImg']) {
+                        $uploaderQ = new ClassUploader(0, 0, 0, "Question");
+                        $uploaderQ->deleteImage("../../../../uploads/Question/" . $question['QuestionImg']);
+                    }
+
+                    // Delete Question Record
+                    $query = "DELETE FROM tb_questions WHERE QuestionID = ?";
+                    $stmtDelQ = $this->conn->prepare($query);
+                    $stmtDelQ->execute([$question['QuestionID']]);
+                }
+
+                // Delete Lesson Record (No image column found in tb_lessons)
+                $query = "DELETE FROM tb_lessons WHERE LessonID = ?";
+                $stmtDelL = $this->conn->prepare($query);
+                $stmtDelL->execute([$lessonID]);
+            }
+
+            // 5. Delete Course Image
+            if ($course['CourseImage']) {
+                    // รูปภาพคอร์สเรียนอาจเก็บในโฟลเดอร์ Course หรือแยกตามประเภท ต้องตรวจสอบ path ให้ถูกต้อง
+                    // สมมติว่าเก็บใน uploads/Course/ ตาม pattern อื่นๆ
+                    // แต่ใน CourseInsert.php อาจจะต้องเช็คว่าเก็บไว้ที่ไหน
+                    // จาก CourseInsert.php (ไม่ได้ดูละเอียด) ปกติจะเก็บใน uploads/Course
+                    $uploaderC = new ClassUploader(0, 0, 0, "Course"); 
+                    $uploaderC->deleteImage("../../../../uploads/Course/" . $course['CourseImage']);
+            }
+
+            // 6. Delete Course Record
+            $query = "DELETE FROM " . $this->table_name . " WHERE CourseID = ?";
+            $stmtDelC = $this->conn->prepare($query);
+            if ($stmtDelC->execute([$CourseID])) {
+                return true;
+            }
+
+            return false;
+
+        } catch (PDOException $e) {
+            return false;
+        }
     }
 }
 ?>

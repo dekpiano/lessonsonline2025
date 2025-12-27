@@ -106,43 +106,50 @@ class ClassEnrollmentUser {
     }
 
     
-    public function EnrollmentProgressUpdateTimeSpent($LessProID,$CountTime,$CourseID) {
-
-        $CheckTime = "SELECT LessProTimeSpent,LessonID FROM tb_lesson_progress WHERE LessProID = ?";
+    public function EnrollmentProgressUpdateTimeSpent($LessProID, $CountTime, $CourseID) {
+        // 1. Get current progress and LessonID
+        $CheckTime = "SELECT LessProTimeSpent, LessonID FROM tb_lesson_progress WHERE LessProID = ?";
         $stmt = $this->conn->prepare($CheckTime);
         $stmt->bindValue(1, $LessProID);
         $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        $CheckTimeLesson = "SELECT LessonStudyTime FROM tb_lessons WHERE CourseID = ? AND LessonNo = ?";
+        if (!$row) return 0;
+
+        $CurrentTimeSpent = floatval($row['LessProTimeSpent']);
+        $LessonID = $row['LessonID'];
+
+        // 2. Get required Study Time for this Lesson directly by LessonID
+        $CheckTimeLesson = "SELECT LessonStudyTime FROM tb_lessons WHERE LessonID = ?";
         $stmtTimeLesson = $this->conn->prepare($CheckTimeLesson);
-        $stmtTimeLesson->bindValue(1, $CourseID);
-        $stmtTimeLesson->bindValue(2, @$row['LessonID']);
+        $stmtTimeLesson->bindValue(1, $LessonID);
         $stmtTimeLesson->execute();
         $rowTimeLesson = $stmtTimeLesson->fetch(PDO::FETCH_ASSOC);
 
-        
-        
-        if(@$row['LessProTimeSpent'] != @$rowTimeLesson['LessonStudyTime']){
-           
-            $UpdateTime = "UPDATE tb_lesson_progress SET LessProTimeSpent = ? WHERE LessProID = ?";
-            $stmtUpTime = $this->conn->prepare($UpdateTime);
-            $stmtUpTime->bindValue(1, $CountTime + @$row['LessProTimeSpent']);
-            $stmtUpTime->bindValue(2, $LessProID);
-            $stmtUpTime->execute();
-            echo @$row['LessProTimeSpent'];
-        }
-        if(@$row['LessProTimeSpent'] == @$rowTimeLesson['LessonStudyTime']){
-           
-            $UpdateTime = "UPDATE tb_lesson_progress SET LessProStatus = ? WHERE LessProID = ?";
-            $stmtUpTime = $this->conn->prepare($UpdateTime);
-            $stmtUpTime->bindValue(1, "เรียนสำเร็จ");
-            $stmtUpTime->bindValue(2, $LessProID);
-            $stmtUpTime->execute();
-            echo(@$row['LessProTimeSpent']);
+        $LessonStudyTime = floatval($rowTimeLesson['LessonStudyTime']);
+        $NewTimeSpent = $CurrentTimeSpent + floatval($CountTime);
 
+        // 3. Logic to update time and status
+        if ($NewTimeSpent >= $LessonStudyTime) {
+            // Completed: Cap time at StudyTime and set status
+            $UpdateSql = "UPDATE tb_lesson_progress SET LessProTimeSpent = ?, LessProStatus = ? WHERE LessProID = ?";
+            $stmtUp = $this->conn->prepare($UpdateSql);
+            $stmtUp->bindValue(1, $LessonStudyTime); // Cap at max
+            $stmtUp->bindValue(2, "เรียนสำเร็จ");
+            $stmtUp->bindValue(3, $LessProID);
+            $stmtUp->execute();
+            
+            echo $LessonStudyTime; // Return max time
+        } else {
+            // Still in progress: Just update time
+            $UpdateSql = "UPDATE tb_lesson_progress SET LessProTimeSpent = ? WHERE LessProID = ?";
+            $stmtUp = $this->conn->prepare($UpdateSql);
+            $stmtUp->bindValue(1, $NewTimeSpent);
+            $stmtUp->bindValue(2, $LessProID);
+            $stmtUp->execute();
+
+            echo $NewTimeSpent; // Return incremented time
         }
-       
     }
 
     public function CheckEnrollmentAll($CourseID){

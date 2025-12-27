@@ -1,70 +1,90 @@
-let timing = 60; //วินาที
-let end = new Date().getTime() + (timing * 1000); // 10 seconds from now
-const circle = document.querySelector('circle');
+let timing = 60; // 60 seconds per cycle
+let endTime = new Date().getTime() + (timing * 1000);
+const circle = document.querySelector('#countdown circle');
 const number = document.getElementById('number');
 const circumference = 2 * Math.PI * circle.getAttribute('r');
-let RoundTime = 0;
 
 circle.style.strokeDasharray = `${circumference} ${circumference}`;
 circle.style.strokeDashoffset = `${circumference}`;
 
 function updateCountdown() {
   const now = new Date().getTime();
-  const distance = end - now;
-  const seconds = Math.floor((distance % (1000 * timing)) / 1000);
+  let distance = endTime - now;
+
+  // Ensure distance doesn't drop below 0 for display (before reset)
+  if (distance < 0) distance = 0;
+
+  const seconds = Math.ceil(distance / 1000);
 
   // Calculate the offset for the circular progress
-  const percent = (((distance / 1000)) / timing) * circumference;
+  // At 60s (start), percentage should be 1.0 -> offset 0 (Full circle) or offset circumference (Empty)?
+  // Original code: percent = (distance / 60000) * C. 
+  // If distance = 60000, percent = C. offset = C - C = 0. (Full)
+  // If distance = 0, percent = 0. offset = C. (Empty)
+  const percent = (distance / (timing * 1000)) * circumference;
   circle.style.strokeDashoffset = circumference - percent;
 
   // Update the timer display
+  // Show 60 as 0:60 or 1:00? User code had 0:ss. 
+  // Let's stick to 00 - 60 range.
   number.textContent = `0:${seconds < 10 ? '0' : ''}${seconds}`;
 
-  // Automatically restart the countdown when it reaches 0
-  if (distance < 0) {
+  // When timer reaches 0, trigger update
+  if (distance <= 0) {
     resetCountdown();    
   }
 }
 
 function resetCountdown() {
-  end = new Date().getTime() + (timing * 1000); // Reset end time to 10 seconds from now
-  circle.style.strokeDashoffset = `${circumference}`; // Reset the circle's stroke dashoffset
-  updateCountdown(); // Update the countdown immediately to avoid delay
-  //RoundTime += 1;
-  //document.getElementById('RoundTime').innerHTML = RoundTime+0;
-  UpdateTimeLesson(1);
+  // Add 1 second buffer to prevent double firing or drift issues visually
+  endTime = new Date().getTime() + (timing * 1000) + 200; 
+  updateCountdown(); 
+  UpdateTimeLesson(1); // Add 1 minute to server
 }
 
-function UpdateTimeLesson(CountTime) {
-  let LessProID = document.getElementById('LessProID').value;
-  let CourseID = document.getElementById('CourseID').value;
-  let LessonStudyTime = document.getElementById('LessonStudyTime').value;
- // let LeesonID = document.getElementById('LeesonID').value;
+function UpdateTimeLesson(CountTime = 0) {
+  let LessProID = $('#LessProID').val();
+  let CourseID = $('#CourseID').val();
+  let LessonStudyTime = parseFloat($('#LessonStudyTime').val()) || 0;
   let CountTimeFull = CountTime;
+
   $.ajax({
     type: "POST",
-    url: "../../../pages/Users/Learn/Php/EnrollmentUpdateTime.php", // เปลี่ยนเป็น URL ของไฟล์ที่รับข้อมูลและอัพเดตฐานข้อมูล
-    data: { LessProID: LessProID,CountTimeFull:CountTimeFull,CourseID:CourseID }, // ส่งข้อมูลตามที่ต้องการ
+    url: "../../../pages/Users/Learn/Php/EnrollmentUpdateTime.php",
+    data: { 
+        LessProID: LessProID, 
+        CountTimeFull: CountTimeFull, 
+        CourseID: CourseID 
+    },
     success: function(response) {
-       console.log(response); // พิมพ์การตอบกลับจากเซิร์ฟเวอร์ใน console
-        if(response != LessonStudyTime){
-          document.getElementById('RoundTime').innerHTML = response;
-          $('#btnQuiz').addClass('disabled');
-
-        }else{
-          document.getElementById('RoundTime').innerHTML = response;
-          $('#btnQuiz').removeClass('disabled');
-         // $('#LessonNo'+LeesonID).removeClass('d-none');
-          clearInterval(interval);
-          
-        }
+        console.log("Current Study Time: " + response + " / Required: " + LessonStudyTime);
+        let currentProgress = parseFloat(response) || 0;
         
+        $('#RoundTime').html(currentProgress);
+
+        if (currentProgress < LessonStudyTime) {
+          // Not finished yet
+          $('#btnQuiz').addClass('d-none');
+          $('#btnLocked').removeClass('d-none');
+        } else {
+          // Finished
+          $('#RoundTime').html(currentProgress); // Ensure final time is shown
+          $('#btnQuiz').removeClass('d-none'); // Show Quiz Button
+          $('#btnLocked').addClass('d-none');  // Hide Locked Button
+          
+          // Stop the local timer
+          clearInterval(interval);
+          number.textContent = "✔"; // Show checkmark or similar
+          circle.style.strokeDashoffset = 0; // Full circle
+        }
+    },
+    error: function() {
+        console.error("Failed to update status");
     }
-});
+  });
 }
 
-updateCountdown(); // Initialize the countdown
-//document.getElementById('RoundTime').innerHTML = 0;
-UpdateTimeLesson();
-const interval = setInterval(updateCountdown, 1000);
-
+// Start checks
+updateCountdown();
+UpdateTimeLesson(0); // Initial check
+const interval = setInterval(updateCountdown, 100); // Update more frequently for smoother animation

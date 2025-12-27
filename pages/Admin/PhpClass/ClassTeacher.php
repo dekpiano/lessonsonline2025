@@ -50,6 +50,20 @@ class ClassTeacher {
 
      // เพิ่มสมัครเรียนใหม่
      public function create() {
+        // Check Limit
+        include_once '../../../pages/Admin/PhpClass/ClassSystemSettings.php';
+        $Settings = new ClassSystemSettings($this->conn);
+        $MaxTeachers = (int)$Settings->getSetting('max_teachers', 10);
+
+        // Count current teachers
+        $queryCheck = "SELECT COUNT(*) FROM " . $this->table_name . " WHERE UserType = 'teacher'";
+        $stmtCheck = $this->conn->prepare($queryCheck);
+        $stmtCheck->execute();
+        $CurrentTeachers = $stmtCheck->fetchColumn();
+
+        if ($CurrentTeachers >= $MaxTeachers) {
+            return "LIMIT_EXCEEDED"; 
+        }
 
         $data = array('UserCode','UserPrefix','UserFirstName','UserLastName','UserBirthday','UserPhone','Username','Password','Email','UserType','DateCreated');
         $ASum = array();
@@ -71,6 +85,73 @@ class ClassTeacher {
             return true;
         }
 
+        return false;
+    }
+    public function readOne() {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE UserID = ? LIMIT 0,1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $this->UserID);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $this->UserID = $row['UserID'];
+        $this->UserCode = $row['UserCode'];
+        $this->UserPrefix = $row['UserPrefix'];
+        $this->UserFirstName = $row['UserFirstName'];
+        $this->UserLastName = $row['UserLastName'];
+        $this->UserBirthday = $row['UserBirthday'];
+        $this->UserPhone = $row['UserPhone'];
+        $this->Username = $row['Username'];
+        $this->Email = $row['Email'];
+    }
+
+    public function update() {
+        // If password is set, update it too, otherwise skip
+        $password_set = !empty($this->Password);
+
+        $query = "UPDATE " . $this->table_name . "
+                  SET UserPrefix = :UserPrefix,
+                      UserFirstName = :UserFirstName,
+                      UserLastName = :UserLastName,
+                      UserBirthday = :UserBirthday,
+                      UserPhone = :UserPhone,
+                      Email = :Email";
+        
+        if ($password_set) {
+            $query .= ", Password = :Password";
+        }
+
+        $query .= " WHERE UserID = :UserID";
+
+        $stmt = $this->conn->prepare($query);
+
+        $stmt->bindParam(':UserPrefix', $this->UserPrefix);
+        $stmt->bindParam(':UserFirstName', $this->UserFirstName);
+        $stmt->bindParam(':UserLastName', $this->UserLastName);
+        $stmt->bindParam(':UserBirthday', $this->UserBirthday);
+        $stmt->bindParam(':UserPhone', $this->UserPhone);
+        $stmt->bindParam(':Email', $this->Email);
+        $stmt->bindParam(':UserID', $this->UserID);
+
+        if ($password_set) {
+            $stmt->bindParam(':Password', $this->Password);
+        }
+
+        if ($stmt->execute()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function delete() {
+        $query = "DELETE FROM " . $this->table_name . " WHERE UserID = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $this->UserID);
+
+        if ($stmt->execute()) {
+            return true;
+        }
         return false;
     }
 }

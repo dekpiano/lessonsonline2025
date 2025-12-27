@@ -10,13 +10,13 @@ $result = $Teacher->read();
 //echo "<pre>";print_r($result->fetch(PDO::FETCH_ASSOC)); exit();
 ?>
 
-<?php include_once('../../../pages/Admin/Layout/HeaderAdmin.php') ?>
+<?php include_once('../../../pages/Teacher/Layout/HeaderTeacher.php') ?>
 
 <body class="hold-transition sidebar-mini layout-fixed">
     <div class="wrapper">
 
-        <?php include_once('../../../pages/Admin/Layout/NavbarTopAdmin.php') ?>
-        <?php include_once('../../../pages/Admin/Layout/NavbarLeftAdmin.php') ?>
+        <?php include_once('../../../pages/Teacher/Layout/NavbarTopTeacher.php') ?>
+        <?php include_once('../../../pages/Teacher/Layout/NavbarLeftTeacher.php') ?>
 
 
         <!-- Content Wrapper. Contains page content -->
@@ -31,7 +31,7 @@ $result = $Teacher->read();
                         <div class="col-sm-6">
                             <ol class="breadcrumb float-sm-right">
                                 <li class="breadcrumb-item"><a href="javascript:history.go(-1)">หน้าแรก</a></li>
-                                <li class="breadcrumb-item active">Dashboard v1</li>
+                                <li class="breadcrumb-item active">จัดการครูผู้สอน</li>
                             </ol>
                         </div><!-- /.col -->
                     </div><!-- /.row -->
@@ -276,10 +276,12 @@ $result = $Teacher->read();
         <!-- /.content-wrapper -->
 
 
-        <?php include_once('../../../pages/Admin/Layout/FooterAdmin.php'); ?>
+        <?php include_once('../../../pages/Teacher/Layout/FooterTeacher.php'); ?>
 </body>
 
 </html>
+<!-- Reuse Admin JS -->
+<script src="../../../pages/Admin/Teacher/Js/JsRegisterTeacher.js"></script>
 
 <script>
 function alertLimitReached(max) {

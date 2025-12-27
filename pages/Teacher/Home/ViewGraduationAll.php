@@ -1,12 +1,13 @@
 <?php include_once '../../../php/Database/Database.php'; 
 include_once '../../../pages/Teacher/Home/Php/ClassHome.php'; 
 include_once '../../../pages/Teacher/PhpClass/ClassCourse.php'; 
+
 // สร้างออบเจกต์ฐานข้อมูลและคอร์สเรียน
 $database = new Database();
 $db = $database->getConnection();
 
 $Home = new ClassHome($db);
-$Title = $Home->TitleBar;
+$Title = "ผู้เรียนที่สำเร็จการศึกษา | " . $Home->TitleBar;
 
 // ดึงข้อมูลสถิติทั้งหมดด้วยการเรียกใช้เมธอดเดียวที่ปรับปรุงประสิทธิภาพแล้ว
 $stats = $Home->getStats();
@@ -17,7 +18,7 @@ $EnrollmentsAll = $stats['total_enrollments'];
 $CheckGraduationAll = $stats['total_graduation'];
 $CountRegisterAll = $stats['total_students'];
 
-$CheckUserEnrollments = $Home->CheckUserEnrollments();
+$ViewGraduationAll = $Home->CheckGraduationAll();
 ?>
 
 <?php include_once('../../../pages/Teacher/Layout/HeaderTeacher.php') ?>
@@ -36,12 +37,12 @@ $CheckUserEnrollments = $Home->CheckUserEnrollments();
                 <div class="container-fluid">
                     <div class="row mb-2">
                         <div class="col-sm-6">
-                            <h1 class="m-0">Dashboard</h1>
+                            <h1 class="m-0">ผู้เรียนที่สำเร็จการศึกษา</h1>
                         </div><!-- /.col -->
                         <div class="col-sm-6">
                             <ol class="breadcrumb float-sm-right">
                                 <li class="breadcrumb-item"><a href="../">Home</a></li>
-                                <li class="breadcrumb-item active">Dashboard</li>
+                                <li class="breadcrumb-item active">Graduation</li>
                             </ol>
                         </div><!-- /.col -->
                     </div><!-- /.row -->
@@ -138,30 +139,32 @@ $CheckUserEnrollments = $Home->CheckUserEnrollments();
                     </div>
                     <!-- /.row -->
                     <hr>
-                    <h2 class="mb-1">ลงทะเบียนเรียน</h2>
+                    <h2 class="mb-1">รายชื่อผู้เรียนที่สำเร็จการศึกษา</h2>
                     <hr>
 
                     <div class="card">
                         <div class="card-body">
-                            <table class="table table-bordered table-hover" id="Tb_ViewRegisterAll">
+                            <table class="table table-bordered table-hover" id="Tb_ViewGraduationAll">
                                 <thead>
                                     <tr>
                                         <th>ชื่อ - นามสกุล</th>
                                         <th>อีเมล</th>
                                         <th>เบอร์โทร</th>
-                                        <th>วันที่ลงทะเบียนเรียน</th>
+                                        <th>วันที่ลงทะเบียน</th>
                                         <th>คอร์สที่เรียน</th>
+                                        <th>เลขที่ประกาศนียบัตร</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($CheckUserEnrollments as $key => $v_CheckUserEnrollments) : ?>
+                                    <?php foreach ($ViewGraduationAll as $key => $v_data) : ?>
                                     <tr>
-                                        <td><?=$v_CheckUserEnrollments['UserPrefix'].$v_CheckUserEnrollments['UserFirstName'].' '.$v_CheckUserEnrollments['UserLastName'];?></td>
-                                        <td><?=$v_CheckUserEnrollments['Email']?></td>
-                                        <td><?=$v_CheckUserEnrollments['UserPhone']?></td>
-                                        <td><?=thai_date_fullmonth(strtotime($v_CheckUserEnrollments['EnrollDate']))?></td>
+                                        <td><?=$v_data['UserPrefix'].$v_data['UserFirstName'].' '.$v_data['UserLastName'];?></td>
+                                        <td><?=$v_data['Email']?></td>
+                                        <td><?=$v_data['UserPhone']?></td>
+                                        <td><?=thai_date_fullmonth(strtotime($v_data['EnrollDate']))?></td>
+                                        <td><?=$v_data['CourseName']?></td>
                                         <td>
-                                        <?=$v_CheckUserEnrollments['CourseName']?>
+                                            <span class="badge badge-success"><?=$v_data['EnrollCertificate']?></span>
                                         </td>
                                     </tr>
                                     <?php endforeach; ?>

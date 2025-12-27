@@ -42,6 +42,13 @@
                             </p>
                         </a>
                     </li>
+                    
+                    <li class="nav-item">
+                        <a href="../../../pages/Teacher/Teacher/index" class="nav-link <?=uri(3) == "Teacher"?"active":""?>">
+                            <i class="nav-icon fas fa-users"></i>
+                            <p>จัดการครูผู้สอน</p>
+                        </a>
+                    </li>
                 </ul>
             </nav>
             <nav class="mt-2 user-panel">

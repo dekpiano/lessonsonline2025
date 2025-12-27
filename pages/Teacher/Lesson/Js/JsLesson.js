@@ -1,10 +1,18 @@
-$('#Tb_Couesr').DataTable({
-    "paging": true,   
-    "ordering": true,
-    "info": true,
-    "autoWidth": false,
+const commonDataTableConfig = {
     "responsive": true,
-  });
+    "lengthChange": false,
+    "autoWidth": false,
+    "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
+};
+
+if ($('#Tb_Couesr').length) {
+    $("#Tb_Couesr").DataTable({
+        ...commonDataTableConfig,
+        "ordering": true,
+        "paging": true,
+        "info": true
+    }).buttons().container().appendTo('#Tb_Couesr_wrapper .col-md-6:eq(0)');
+}
 
 $('#summernote').summernote({
   height: 400,               

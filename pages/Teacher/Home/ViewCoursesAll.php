@@ -4,21 +4,20 @@ include_once '../../../pages/Teacher/PhpClass/ClassCourse.php';
 // สร้างออบเจกต์ฐานข้อมูลและคอร์สเรียน
 $database = new Database();
 $db = $database->getConnection();
-$course = new ClassCourse($db);
 
 $Home = new ClassHome($db);
 $Title = $Home->TitleBar;
 
-// เช็ค dashborad
-$CourseAll = $course->CheckPackageCourse();
-$LessonsAll = $course->CheckLessons();
-$EnrollmentsAll = $course->CheckEnrollments();
-$CheckGraduationAll = $course->CheckGraduation();
-$CountRegisterAll = $Home->CheckPackageCourse();
+// ดึงข้อมูลสถิติทั้งหมดด้วยการเรียกใช้เมธอดเดียวที่ปรับปรุงประสิทธิภาพแล้ว
+$stats = $Home->getStats();
+
+$CourseAll = $stats['total_courses'];
+$LessonsAll = $stats['total_lessons'];
+$EnrollmentsAll = $stats['total_enrollments'];
+$CheckGraduationAll = $stats['total_graduation'];
+$CountRegisterAll = $stats['total_students'];
 
 $CheckCoursesAll = $Home->CheckCoursesAll();
-
-//exit();
 ?>
 
 <?php include_once('../../../pages/Teacher/Layout/HeaderTeacher.php') ?>
@@ -114,7 +113,7 @@ $CheckCoursesAll = $Home->CheckCoursesAll();
                                 <div class="icon">
                                     <i class="ion ion-pie-graph"></i>
                                 </div>
-                                <a href="#" class="small-box-footer">More info <i
+                                <a href="ViewGraduationAll.php" class="small-box-footer">More info <i
                                         class="fas fa-arrow-circle-right"></i></a>
                             </div>
                         </div>

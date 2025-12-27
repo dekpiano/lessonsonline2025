@@ -20,5 +20,13 @@ $Teacher->Email = $_POST['Email'];
 $Teacher->UserType = "teacher";
 $Teacher->DateCreated = date('Y-m-d H:i:s');
 
-echo $Teacher->create();
+$result = $Teacher->create();
+
+if($result === "LIMIT_EXCEEDED") {
+    echo "limit";
+} else if($result) {
+    echo 1;
+} else {
+    echo 0;
+}
 ?>

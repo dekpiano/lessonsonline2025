@@ -49,6 +49,15 @@
                         </p>
                     </a>
                 </li> 
+                <li class="nav-item">
+                    <a href="../../../pages/Admin/Settings/SettingsMain"
+                        class="nav-link <?=uri(3) == "Settings"?"active":""?> ">
+                        <i class="nav-icon fas fa-cogs"></i>
+                        <p>
+                            ตั้งค่าคอร์สเรียน
+                        </p>
+                    </a>
+                </li> 
             </ul>
         </nav>
         <!-- /.sidebar-menu -->
