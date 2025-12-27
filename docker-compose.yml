@@ -1,0 +1,27 @@
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lessonsonline_app
+    ports:
+      - "8088:80"
+      - "4433:443"
+    volumes:
+      - .:/var/www/html:delegated
+    environment:
+      # Database connection settings
+      DB_HOST: host.docker.internal
+      DB_PORT: 3306
+      DB_NAME: skjacth_lessonsonline
+      DB_USERNAME: root
+      DB_PASSWORD: rootpassword
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - lessonsonline_network
+
+networks:
+  lessonsonline_network:
+    driver: bridge

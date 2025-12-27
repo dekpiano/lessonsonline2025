@@ -1,0 +1,10 @@
+RewriteEngine On
+
+# หากไม่ใช่ไฟล์จริง
+RewriteCond %{REQUEST_FILENAME} !-f
+# และไม่ใช่ไดเรกทอรี
+RewriteCond %{REQUEST_FILENAME} !-d
+# และมี .php ต่อท้าย
+RewriteCond %{REQUEST_FILENAME}.php -f
+# ให้เพิ่ม .php ต่อท้าย URL ที่ร้องขอ
+RewriteRule ^(.+)$ $1.php [L]
