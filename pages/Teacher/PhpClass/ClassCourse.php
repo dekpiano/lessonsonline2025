@@ -5,7 +5,7 @@ class ClassCourse {
     private $conn;
     private $table_name = "tb_courses";
 
-    public $TitleBar = "คอร์สเรียน";
+    public $TitleBar = "คอร์สเรียน | บทเรียนออนไลน์ สกร.นครสวรรค์";
     public $CourseID;
     public $CourseName;
     public $CourseDescription;

@@ -3,8 +3,8 @@
         <a href="../../../" class="navbar-brand d-flex align-items-center gap-2">
             <img src="../../../dist/img/AdminLTELogo.png" alt="Logo" class="brand-image" style="width: 40px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
             <div class="brand-text-wrapper ml-1">
-                <span class="font-weight-bold h5 mb-0 d-block" style="color: var(--primary); letter-spacing: -0.5px;">LESSONS ONLINE</span>
-                <small class="text-muted d-none d-md-block" style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">ศูนย์วิทยาศาสตร์เพื่อการศึกษานครสวรรค์</small>
+                <span class="font-weight-bold h5 mb-0 d-block" style="color: var(--primary); letter-spacing: -0.5px;">บทเรียนออนไลน์ สกร.</span>
+                <div class="text-muted d-md-block" style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">ศูนย์วิทยาศาสตร์เพื่อการศึกษานครสวรรค์</div>
             </div>
         </a>
 

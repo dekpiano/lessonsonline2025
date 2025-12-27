@@ -7,7 +7,7 @@ $db = $database->getConnection();
 $Course = new ClassLearn($db);
 $CourseMain = new ClassCourse($db);
 
-$Title = "บทเรียนออนไลน์ | SKJ";
+$Title = "บทเรียนออนไลน์ | บทเรียนออนไลน์ สกร.นครสวรรค์";
 $Resutl = $Course->readLessonsAll(@$_GET['Course']);
 $ResutlSing = $Course->readLessonsAll1(@$_GET['Course']);
 $LesSing = $Course->readLessonsSingle(@$_GET['Course'],@$_GET['Leeson']);

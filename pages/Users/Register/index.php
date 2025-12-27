@@ -4,7 +4,7 @@ include_once '../../Users/PhpClass/ClassLearn.php';
 include_once '../../../pages/Users/PhpClass/ClassRegisterUser.php';
 $database = new Database();
 $db = $database->getConnection();
-$Title = "สมัครสมาชิก | Lessons Online";
+$Title = "สมัครสมาชิก | บทเรียนออนไลน์ สกร.นครสวรรค์";
 $User = new ClassRegisterUser($db);
 $Course = new ClassLearn($db);
 ?>

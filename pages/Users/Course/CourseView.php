@@ -16,7 +16,7 @@ $Course->readSingle();
 $stmt = $Course->readLessonsAll(@$_GET['CourseID']);
 $Resutl = $Course->readLessonsAll(@$_GET['Course']);
 
-$Title = $Course->CourseName . " | รายละเอียดคอร์ส";
+$Title = $Course->CourseName . " | บทเรียนออนไลน์ สกร.นครสวรรค์";
 ?>
 <?php include_once('../../../pages/Users/Layout/HeaderUser.php') ?>
 

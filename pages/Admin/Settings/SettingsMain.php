@@ -7,7 +7,7 @@ $db = $database->getConnection();
 $Settings = new ClassSystemSettings($db);
 
 $MaxCourses = $Settings->getSetting('max_total_courses', 50);
-$Title = "ตั้งค่าคอร์สเรียน";
+$Title = "ตั้งค่าคอร์สเรียน | บทเรียนออนไลน์ สกร.นครสวรรค์";
 ?>
 
 <?php include_once('../../../pages/Admin/Layout/HeaderAdmin.php') ?>

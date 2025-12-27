@@ -3,7 +3,7 @@ class ClassTeacher {
     private $conn;
     private $table_name = "tb_users";
 
-    public $TitleBar = "จัดการครูผู้สอน";
+    public $TitleBar = "จัดการครูผู้สอน | บทเรียนออนไลน์ สกร.นครสวรรค์";
     public $CourseID;
     public $CourseName;
     public $Description;

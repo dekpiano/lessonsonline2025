@@ -3,9 +3,8 @@ include_once '../../../pages/Admin/PhpClass/ClassTeacher.php';
 // สร้างออบเจกต์ฐานข้อมูลและคอร์สเรียน
 $database = new Database();
 $db = $database->getConnection();
-$Title = "จัดการครูผู้สอน";
-
 $Teacher = new ClassTeacher($db);
+$Title = $Teacher->TitleBar;
 $result = $Teacher->read();
 //echo "<pre>";print_r($result->fetch(PDO::FETCH_ASSOC)); exit();
 ?>

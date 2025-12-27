@@ -13,7 +13,7 @@ $db = $database->getConnection();
 $Course = new ClassCourse($db);
 $Enroll = new ClassEnrollmentUser($db);
 $Learn = new ClassLearn($db);
-$Title = "บทเรียนออนไลน์ | SKJ";
+$Title = "บทเรียนออนไลน์ | บทเรียนออนไลน์ สกร.นครสวรรค์";
 $stmt = $Course->read();
 
 $Resutl = $Course->readLessonsAll(@$_GET['Course']); //เมนูซ้าย

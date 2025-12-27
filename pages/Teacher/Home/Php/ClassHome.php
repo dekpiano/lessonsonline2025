@@ -3,7 +3,7 @@ class ClassHome {
     private $conn;
     private $table_name = "tb_courses";
 
-    public $TitleBar = "หน้าแรก";
+    public $TitleBar = "หน้าแรก | บทเรียนออนไลน์ สกร.นครสวรรค์";
 
     public function __construct($db) {
         $this->conn = $db;
